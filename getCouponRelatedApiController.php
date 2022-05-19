@@ -52,6 +52,41 @@ class getCouponRelatedApiController extends Controller {
         // dd(json_encode($return_results));
         return json_encode($return_results);
     }
+    // fetch all coupon status
+    public function get_all_coupon_status(Request $request){
+        $web_id = null !==$request->input('web_id') ? $request->input('web_id') : '_';
+        
+        // connect to db, select coupon in running with the highest prioity
+        $coupon_query = DB::connection('rhea1-db0')->table('addfan_activity')
+                                // ->select('coupon_budget', 'start_time', 'end_time')
+                                ->selectRaw('id, (coupon_budget-cost)/(1+datediff(end_time, curdate())) as avg_budget, 
+                                datediff(end_time, curdate()) as remain_time, (coupon_budget-cost) as remain_budget, 
+                                customer_type, website_type, coupon_limit')                            
+                                ->where('web_id', $web_id)
+                                ->where('activity_enable', 1)
+                                ->where('coupon_enable', 1)
+                                ->where('activity_delete', '!=', 1)
+                                ->where('coupon_budget', '>', 'cost')
+                                ->whereRaw('curdate() between start_time and end_time')   
+                                ->orderByRaw('avg_budget DESC, remain_time ASC')
+                                ->get();
+
+        // dd(empty($coupon_query[0]));
+        $coupon_status = empty($coupon_query[0]) ? false : true;
+        if ($coupon_status) {
+            $return_results = array();
+            foreach ($coupon_query as $sub_array) {
+                $sub_array->status = true;
+                array_push($return_results, $sub_array);
+            }
+            return json_encode($coupon_query);
+        } else {
+            $return_results = array("avg_budget"=>0, "remain_time"=>0, "remain_budget"=>0, "coupon_limit"=> 'limit-bill=0',
+                                    "id" => -1, "customer_type" => 0, "website_type" => 0, "status" => false);
+            return json_encode(array($return_results));
+        };
+    }
+
     // fetch coupon model
     public function get_coupon_model(Request $request){
         $web_id = null !==$request->input('web_id') ? $request->input('web_id') : 'default';
@@ -120,7 +155,7 @@ class getCouponRelatedApiController extends Controller {
                                 ->join('addfan_coupon', 'addfan_activity.link_code', 'addfan_coupon.link_code')
                                 ->select('addfan_activity.title', 'addfan_activity.coupon_description', 'addfan_coupon.coupon_code', 
                                 'addfan_activity.link_code', 'addfan_activity.coupon_type', 'addfan_activity.coupon_amount', 
-                                'addfan_activity.coupon_code_mode', 'addfan_activity.coupon_time_limit', 'addfan_activity.coupon_limit')
+                                'addfan_activity.coupon_code_mode', 'addfan_activity.coupon_time_limit', 'addfan_activity.coupon_limit', 'addfan_activity.coupon_url')
                                 ->where('addfan_activity.id', $coupon_id)
                                 ->where('addfan_coupon.is_sent', 0)
                                 ->first(); // prevent SQL injection        
@@ -161,7 +196,6 @@ class getCouponRelatedApiController extends Controller {
         // dd(json_encode($return_results));
         return json_encode($return_results);
     }
-
     // fetch ad details
     public function get_ad(Request $request){
         $ad_id = null !==$request->input('ad_id') ? $request->input('ad_id') : 0;

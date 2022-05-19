@@ -58,13 +58,10 @@ Route::get('/getSlidingConfig','getSlidingConfigApiController@get_config');//滑
 Route::get('/getTrackingConfig','getTrackingConfigApiController@get_config');//tracking code config api
 Route::get('/tracking/enable','getTrackingConfigApiController@check_enable');//tracking code 開關
 Route::get('/tracking/config','getTrackingConfigApiController@get_config2');//tracking code config api
-Route::get('/tracking/cart','getTrackingConfigApiController@get_cart_parser');//parsing cart config api
 
 
 Route::get('/coupon/enable','getCouponRelatedApiController@check_enable');//addfan coupon,ad code總開關
 Route::get('/coupon/status','getCouponRelatedApiController@get_coupon_status');//coupon status
-Route::get('/coupon/status_all','getCouponRelatedApiController@get_all_coupon_status');//all coupons status
-
 Route::get('/coupon/model','getCouponRelatedApiController@get_coupon_model');//coupon model
 Route::get('/coupon/model2','getCouponRelatedApiController@get_coupon_model2');//coupon model
 Route::get('/coupon/details','getCouponRelatedApiController@get_coupon');//coupon
@@ -113,12 +110,3 @@ Route::get('/test/getOnpage_test','gatherPageApiController@get_onpage_data_test'
 Route::get('/test/getMediaOnpage_test','gatherPageApiController_test@media_onpage_info_test');//onpage_data_test
 Route::get('/test/getuuidpurchased','gatherPageApiController_test@get_uuid_purchased');//滑不完購買紀錄
 Route::get('/test/getOnpageRe','gatherPageApiController_test@get_onpage_data_re_test');//onpage購買紀錄test
-
-
-Route::get('/test/get_lineuser', 'lineGroupMessageController@get_lineuser');
-Route::get('/test/line_groupMessage', 'lineGroupMessageController@line_groupMessage');
-
-
-Route::get('/csv_test', 'ProductFeedParserForPreview@csv_test');
-
-Route::get('/articleMedia_david','gatherPageApiControllerDavid@get_article_for_media');//文章推薦文章
