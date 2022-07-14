@@ -22,26 +22,6 @@ class getCouponRelatedApiController extends Controller {
         return json_encode($addfan_status);
     }
 
-    // change enable
-    public function change_enable(Request $request){
-        $web_id = null !==$request->input('web_id') ? $request->input('web_id') : '_';
-        $enable = (int)$request->input('enable');
-        if (!isset($enable)) {
-            # no enable input
-            return json_encode(-1);
-        }
-        if ($enable!=0 && $enable!=1) {
-            # not valid input
-            return json_encode(-2);
-        }
-        // dd($coupon_id);
-        // connect to db, update to 0 or 1
-        $affected = DB::connection('rheacache-db0')->table('cdp_tracking_settings')
-                                ->where('web_id', $web_id)
-                                ->update(['enable_addfan' => $enable]);
-        return json_encode($affected);
-    }
-
 
 
     // fetch coupon status

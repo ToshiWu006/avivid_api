@@ -28,6 +28,9 @@ Route::get('/searchEngineCdn', 'searchEngineController@searchEngine_cdn');
 
 Route::get('/recommendWordCdn', 'searchEngineController@getRecommendWordCdn');
 
+// 集合頁，取商品資料
+Route::get('/itemPageGetItem', 'itemPageController@getItem');
+
 Route::get('/getHotWordCdn', 'searchEngineController@getHotWordCdn');
 Route::get('/getAlsoWatchedWordCdn', 'searchEngineController@getAlsoWatchedWordCdn');
 Route::get('/getUuidLikeWordCdn', 'searchEngineController@getUuidLikeWordCdn');
@@ -62,6 +65,8 @@ Route::get('/tracking/cart','getTrackingConfigApiController@get_cart_parser');//
 
 
 Route::get('/coupon/enable','getCouponRelatedApiController@check_enable');//addfan coupon,ad code總開關
+Route::post('/coupon/enable','getCouponRelatedApiController@change_enable');//addfan coupon,ad code總開關
+
 Route::get('/coupon/status','getCouponRelatedApiController@get_coupon_status');//coupon status
 Route::get('/coupon/status_all','getCouponRelatedApiController@get_all_coupon_status');//all coupons status
 
@@ -122,3 +127,10 @@ Route::get('/test/line_groupMessage', 'lineGroupMessageController@line_groupMess
 Route::get('/csv_test', 'ProductFeedParserForPreview@csv_test');
 
 Route::get('/articleMedia_david','gatherPageApiControllerDavid@get_article_for_media');//文章推薦文章
+Route::get('/productEcom_david','gatherPageApiControllerDavid@get_product_for_ecom');//電商推薦商品集合頁 滑不完
+
+
+Route::get('/cartEcom','cartRecommendController@get_cart_ecom');//購物車商品集合頁
+Route::get('/cart_item','cartRecommendController@get_cart_item');
+
+Route::get('/keywordSearch','keywordSearchController@get_keyword');//新搜索版位

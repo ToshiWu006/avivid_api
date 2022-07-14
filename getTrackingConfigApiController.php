@@ -30,7 +30,8 @@ class getTrackingConfigApiController extends Controller {
         $tracking_config = DB::connection('rheacache-db0')->table('cdp_tracking_settings')
                                 ->select('gtm_code', 'addToCart_trigger_name', 'addToCart_index', 'addToCart_key', 
                                 'removeCart_trigger_name', 'removeCart_index', 'removeCart_key', 
-                                'purchase_trigger_name', 'purchase_index', 'purchase_key', 'purchase_choose_index', 'enable_tracking')
+                                'purchase_trigger_name', 'purchase_index', 'purchase_key', 'purchase_choose_index', 'enable_tracking',
+                                'coupon_input_trigger', 'coupon_input_selector', 'coupon_click_selector', 'coupon_enter_href')
                                 ->where('web_id', $web_id)->first(); // prevent SQL injection
         $tracking_config = isset($tracking_config) ? $tracking_config : array("enable_tracking"=> 0);
 
