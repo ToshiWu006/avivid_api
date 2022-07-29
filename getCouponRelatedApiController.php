@@ -11,20 +11,33 @@ class getCouponRelatedApiController extends Controller {
 
     // fetch addfan status
     public function check_enable(Request $request){
-        $web_id = null !==$request->input('web_id') ? $request->input('web_id') : '_';
-
-        // connect to db
-        // $tracking_config = DB::connection('rheacache-db0')->table('cdp_tracking_settings')->where('web_id', $web_id)->get(); // prevent SQL injection  
-        $addfan_status = DB::connection('rheacache-db0')->table('cdp_tracking_settings')
+        // $web_id = null !==$request->input('web_id') ? $request->input('web_id') : '_';
+        $web_id = $request->input('web_id');
+        if (isset($web_id)) {
+            // input web_id
+            $addfan_status = DB::connection('rheacache-db0')->table('cdp_tracking_settings')
                                 ->select('enable_addfan')
                                 ->where('web_id', $web_id)->first(); // prevent SQL injection
-        $addfan_status = isset($addfan_status) ? $addfan_status : array("enable_addfan"=> 0);
+            $addfan_status = isset($addfan_status) ? $addfan_status : array("enable_addfan"=> 0);
+        } else {
+            // no web_id
+            $addfan_status = DB::connection('rheacache-db0')->table('cdp_tracking_settings')
+                                ->select('web_id', 'enable_addfan')
+                                ->get();
+        }
+        // connect to db
+        // $tracking_config = DB::connection('rheacache-db0')->table('cdp_tracking_settings')->where('web_id', $web_id)->get(); // prevent SQL injection  
+        // $addfan_status = DB::connection('rheacache-db0')->table('cdp_tracking_settings')
+        //                         ->select('enable_addfan')
+        //                         ->where('web_id', $web_id)->first(); // prevent SQL injection
+        // $addfan_status = isset($addfan_status) ? $addfan_status : array("enable_addfan"=> 0);
         return json_encode($addfan_status);
     }
 
     // change enable
     public function change_enable(Request $request){
-        $web_id = null !==$request->input('web_id') ? $request->input('web_id') : '_';
+        // $web_id = null !==$request->input('web_id') ? $request->input('web_id') : '_';
+        $web_id = $request->input('web_id');
         $enable = (int)$request->input('enable');
         if (!isset($enable)) {
             # no enable input
@@ -34,11 +47,23 @@ class getCouponRelatedApiController extends Controller {
             # not valid input
             return json_encode(-2);
         }
+        if (isset($web_id)) {
+            // input web_id
+            $affected = DB::connection('rheacache-db0')->table('cdp_tracking_settings')
+                            ->where('web_id', $web_id)
+                            ->update(['enable_addfan' => $enable]);
+        } else {
+            // no web_id
+            $affected = DB::connection('rheacache-db0')->table('cdp_tracking_settings')
+                            ->where('enable_tracking', 2)
+                            ->where('enable_analysis', 2)
+                            ->update(['enable_addfan' => $enable]);
+        }
         // dd($coupon_id);
         // connect to db, update to 0 or 1
-        $affected = DB::connection('rheacache-db0')->table('cdp_tracking_settings')
-                                ->where('web_id', $web_id)
-                                ->update(['enable_addfan' => $enable]);
+        // $affected = DB::connection('rheacache-db0')->table('cdp_tracking_settings')
+        //                         ->where('web_id', $web_id)
+        //                         ->update(['enable_addfan' => $enable]);
         return json_encode($affected);
     }
 
@@ -53,7 +78,7 @@ class getCouponRelatedApiController extends Controller {
                                 // ->select('coupon_budget', 'start_time', 'end_time')
                                 ->selectRaw('id, (coupon_budget-cost)/(1+datediff(end_time, curdate())) as avg_budget, 
                                 datediff(end_time, curdate()) as remain_time, (coupon_budget-cost) as remain_budget, 
-                                customer_type, website_type')                            
+                                customer_type, website_type, max_revenue')                            
                                 ->where('web_id', $web_id)
                                 ->where('activity_enable', 1)
                                 ->where('coupon_enable', 1)
@@ -66,9 +91,10 @@ class getCouponRelatedApiController extends Controller {
         $coupon_id = $coupon_status ? $coupon_query->id : -1;
         $coupon_customer_type = $coupon_status ? $coupon_query->customer_type : 0;
         $website_type = $coupon_status ? $coupon_query->website_type : 0;
+        $max_revenue = $coupon_status ? $coupon_query->max_revenue : 0;
 
         $return_results = array("status" => $coupon_status, "id" => $coupon_id, "customer_type" => $coupon_customer_type,
-                                "website_type" => $website_type);
+                                "website_type" => $website_type, "max_revenue" => $max_revenue);
         // dd(json_encode($return_results));
         return json_encode($return_results);
     }
@@ -81,7 +107,7 @@ class getCouponRelatedApiController extends Controller {
                                 // ->select('coupon_budget', 'start_time', 'end_time')
                                 ->selectRaw('id, (coupon_budget-cost)/(1+datediff(end_time, curdate())) as avg_budget, 
                                 datediff(end_time, curdate()) as remain_time, (coupon_budget-cost) as remain_budget, 
-                                customer_type, website_type, coupon_limit')                            
+                                customer_type, website_type, coupon_limit, max_revenue, coupon_time_limit')
                                 ->where('web_id', $web_id)
                                 ->where('activity_enable', 1)
                                 ->where('coupon_enable', 1)
@@ -102,7 +128,7 @@ class getCouponRelatedApiController extends Controller {
             return json_encode($coupon_query);
         } else {
             $return_results = array("avg_budget"=>0, "remain_time"=>0, "remain_budget"=>0, "coupon_limit"=> 'limit-bill=0',
-                                    "id" => -1, "customer_type" => 0, "website_type" => 0, "status" => false);
+                                    "id" => -1, "customer_type" => 0, "website_type" => 0, "max_revenue" => 0, "status" => false);
             return json_encode(array($return_results));
         };
     }
