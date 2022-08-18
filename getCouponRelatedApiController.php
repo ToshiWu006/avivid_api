@@ -202,7 +202,8 @@ class getCouponRelatedApiController extends Controller {
                                 ->select('addfan_activity.title', 'addfan_activity.coupon_description', 'addfan_coupon.coupon_code', 
                                 'addfan_activity.link_code', 'addfan_activity.coupon_type', 'addfan_activity.coupon_amount', 
                                 'addfan_activity.coupon_code_mode', 'addfan_activity.coupon_time_limit', 'addfan_activity.coupon_limit', 
-                                'addfan_activity.coupon_url', 'addfan_activity.coupon_waitingTime')
+                                'addfan_activity.coupon_url', 'addfan_activity.coupon_waitingTime', 'addfan_activity.promotion_switch',
+                                'addfan_activity.promotion_items_title', 'addfan_activity.promotion_items_url')
                                 ->where('addfan_activity.id', $coupon_id)
                                 ->where('addfan_coupon.is_sent', 0)
                                 ->first(); // prevent SQL injection        
@@ -295,23 +296,25 @@ class getCouponRelatedApiController extends Controller {
     // fetch sale items
     public function get_sale_item(Request $request){
         $web_id = null !==$request->input('web_id') ? $request->input('web_id') : '_';
-        $price = null !==$request->input('price') ? $request->input('price') : 0;
+        // $price = null !==$request->input('price') ? $request->input('price') : 0;
 
         // connect to db
         $sale_item = DB::connection('rhea1-db0')->table('item_list')
                                 ->select('price', 'sale_price', 'title', 'url')
                                 ->where('web_id', $web_id)
-                                ->where('sale_price', '>=', $price)
-                                ->whereRaw('price - sale_price > 0')
-                                ->orderby('sale_price')
-                                ->first(); // prevent SQL injection
+                                ->where('sale_price', '>=', 200)                                
+                                ->orderByRaw("RAND()")
+                                ->limit(10)
+                                ->get();
         if (!isset($sale_item)) {
             $sale_item = DB::connection('rhea1-db0')->table('item_list')
                                 ->select('price', 'sale_price', 'title', 'url')
                                 ->where('web_id', $web_id)
                                 ->whereRaw('price - sale_price > 0')
                                 ->orderby('sale_price', 'desc')
-                                ->first(); // prevent SQL injection
+                                ->limit(10)
+                                ->orderByRaw("RAND()")
+                                ->get();
         }
         $title = isset($sale_item) ? $sale_item->title : "_";
         $url = isset($sale_item) ? $sale_item->url : "_";
