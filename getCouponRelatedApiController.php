@@ -292,7 +292,31 @@ class getCouponRelatedApiController extends Controller {
         return json_encode($ad_result);
     }
 
+    // fetch sale items
+    public function get_sale_item(Request $request){
+        $web_id = null !==$request->input('web_id') ? $request->input('web_id') : '_';
+        $price = null !==$request->input('price') ? $request->input('price') : 0;
 
-
+        // connect to db
+        $sale_item = DB::connection('rhea1-db0')->table('item_list')
+                                ->select('price', 'sale_price', 'title', 'url')
+                                ->where('web_id', $web_id)
+                                ->where('sale_price', '>=', $price)
+                                ->whereRaw('price - sale_price > 0')
+                                ->orderby('sale_price')
+                                ->first(); // prevent SQL injection
+        if (!isset($sale_item)) {
+            $sale_item = DB::connection('rhea1-db0')->table('item_list')
+                                ->select('price', 'sale_price', 'title', 'url')
+                                ->where('web_id', $web_id)
+                                ->whereRaw('price - sale_price > 0')
+                                ->orderby('sale_price', 'desc')
+                                ->first(); // prevent SQL injection
+        }
+        $title = isset($sale_item) ? $sale_item->title : "_";
+        $url = isset($sale_item) ? $sale_item->url : "_";
+        $sale_item_result = array("title"=>$title, "url"=>$url);
+        return json_encode($sale_item_result);
+    }
 }
 
