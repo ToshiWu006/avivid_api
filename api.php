@@ -76,6 +76,8 @@ Route::get('/coupon/details','getCouponRelatedApiController@get_coupon');//coupo
 Route::post('/coupon/batchStatus','getCouponRelatedApiController@chage_coupon_is_sent');//批量代碼改變狀態
 
 Route::get('/coupon/ad_status','getCouponRelatedApiController@get_ad_status');//ad status
+Route::get('/coupon/ad_status_all','getCouponRelatedApiController@get_all_ad_status');//ad status
+
 Route::get('/coupon/ad_details','getCouponRelatedApiController@get_ad');//ad details
 
 
@@ -134,3 +136,8 @@ Route::get('/cartEcom','cartRecommendController@get_cart_ecom');//購物車商�
 Route::get('/cart_item','cartRecommendController@get_cart_item');
 
 Route::get('/keywordSearch','keywordSearchController@get_keyword');//新搜索版位
+
+Route::get('/keywordSearch_kyo','keywordSearchKyoController@get_keyword');//新搜索版位
+
+Route::middleware('throttle:60000,1')->
+    get('/productRec', 'publicApiController@get_product_for_ecom');//對外商品推薦API
