@@ -81,6 +81,7 @@ Route::get('/coupon/ad_status_all','getCouponRelatedApiController@get_all_ad_sta
 Route::get('/coupon/ad_details','getCouponRelatedApiController@get_ad');//ad details
 
 Route::get('/get_sale_item','getCouponRelatedApiController@get_sale_item');//get item which is on sale by nearest price
+Route::get('/get_name_url','getCouponRelatedApiController@get_product_name_url');// convert porduct id to name and url
 
 Route::get('/getGAEventWebId', 'recommendationSettingsController@getGAEventWebId');//使用GA事件的web id名單
 Route::get('/getIgnoreUTMWebId', 'recommendationSettingsController@getIgnoreUTMWebId');//不使用UTM的web id名單

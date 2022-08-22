@@ -306,5 +306,24 @@ class getCouponRelatedApiController extends Controller {
                                 ->get();
          return json_encode(!empty($sale_item[0]) ? $sale_item : array(array("title"=>"_", "url"=>"_")));
     }
+
+
+    // convert product_id to name and url
+    public function get_product_name_url(Request $request){
+        $web_id = null !==$request->input('web_id') ? $request->input('web_id') : '_';
+        $product_id = null !==$request->input('product_id') ? $request->input('product_id') : '_';
+        // connect to db
+        $data = DB::connection('rhea1-db0')->table('item_list')
+                                ->select('title', 'url')
+                                ->where('web_id', $web_id)
+                                ->where('product_id', $product_id)                                
+                                ->first();
+
+        $name = isset($data) ? $data->title : "_";
+        $url = isset($data) ? $data->url : "_";
+        $result = array("name"=>$name, "url"=>$url);
+        
+        return json_encode($result);
+    }
 }
 
