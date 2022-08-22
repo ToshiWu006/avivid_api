@@ -296,30 +296,15 @@ class getCouponRelatedApiController extends Controller {
     // fetch sale items
     public function get_sale_item(Request $request){
         $web_id = null !==$request->input('web_id') ? $request->input('web_id') : '_';
-        // $price = null !==$request->input('price') ? $request->input('price') : 0;
-
         // connect to db
         $sale_item = DB::connection('rhea1-db0')->table('item_list')
-                                ->select('price', 'sale_price', 'title', 'url')
+                                ->select('title', 'url')
                                 ->where('web_id', $web_id)
                                 ->where('sale_price', '>=', 200)                                
                                 ->orderByRaw("RAND()")
                                 ->limit(10)
                                 ->get();
-        if (!isset($sale_item)) {
-            $sale_item = DB::connection('rhea1-db0')->table('item_list')
-                                ->select('price', 'sale_price', 'title', 'url')
-                                ->where('web_id', $web_id)
-                                ->whereRaw('price - sale_price > 0')
-                                ->orderby('sale_price', 'desc')
-                                ->limit(10)
-                                ->orderByRaw("RAND()")
-                                ->get();
-        }
-        $title = isset($sale_item) ? $sale_item->title : "_";
-        $url = isset($sale_item) ? $sale_item->url : "_";
-        $sale_item_result = array("title"=>$title, "url"=>$url);
-        return json_encode($sale_item_result);
+         return json_encode(!empty($sale_item[0]) ? $sale_item : array(array("title"=>"_", "url"=>"_")));
     }
 }
 
