@@ -107,7 +107,7 @@ class getCouponRelatedApiController extends Controller {
                                 // ->select('coupon_budget', 'start_time', 'end_time')
                                 ->selectRaw('id, (coupon_budget-cost)/(1+datediff(end_time, curdate())) as avg_budget, 
                                 datediff(end_time, curdate()) as remain_time, (coupon_budget-cost) as remain_budget, 
-                                customer_type, website_type, coupon_limit, max_revenue')                            
+                                customer_type, website_type, coupon_limit, max_revenue, coupon_time_limit')
                                 ->where('web_id', $web_id)
                                 ->where('activity_enable', 1)
                                 ->where('coupon_enable', 1)
@@ -120,10 +120,10 @@ class getCouponRelatedApiController extends Controller {
         // dd(empty($coupon_query[0]));
         $coupon_status = empty($coupon_query[0]) ? false : true;
         if ($coupon_status) {
-            $return_results = array();
+            // $return_results = array();
             foreach ($coupon_query as $sub_array) {
                 $sub_array->status = true;
-                array_push($return_results, $sub_array);
+                // array_push($return_results, $sub_array);
             }
             return json_encode($coupon_query);
         } else {
@@ -201,7 +201,9 @@ class getCouponRelatedApiController extends Controller {
                                 ->join('addfan_coupon', 'addfan_activity.link_code', 'addfan_coupon.link_code')
                                 ->select('addfan_activity.title', 'addfan_activity.coupon_description', 'addfan_coupon.coupon_code', 
                                 'addfan_activity.link_code', 'addfan_activity.coupon_type', 'addfan_activity.coupon_amount', 
-                                'addfan_activity.coupon_code_mode', 'addfan_activity.coupon_time_limit', 'addfan_activity.coupon_limit', 'addfan_activity.coupon_url')
+                                'addfan_activity.coupon_code_mode', 'addfan_activity.coupon_time_limit', 'addfan_activity.coupon_limit', 
+                                'addfan_activity.coupon_url', 'addfan_activity.coupon_waitingTime', 'addfan_activity.promotion_switch',
+                                'addfan_activity.promotion_items_title', 'addfan_activity.promotion_items_url')
                                 ->where('addfan_activity.id', $coupon_id)
                                 ->where('addfan_coupon.is_sent', 0)
                                 ->first(); // prevent SQL injection        
@@ -227,7 +229,7 @@ class getCouponRelatedApiController extends Controller {
         $web_id = null !==$request->input('web_id') ? $request->input('web_id') : '_';        
         // connect to db, select coupon in running with the highest prioity
         $ad_query = DB::connection('rhea1-db0')->table('addfan_activity')
-                                ->selectRaw('id, datediff(end_time, curdate()) as remain_time, website_type')
+                                ->selectRaw('id, datediff(end_time, curdate()) as remain_time, website_type, customer_type')
                                 ->where('web_id', $web_id)
                                 ->where('activity_enable', 1)
                                 ->where('ad_enable', 1)
@@ -238,9 +240,39 @@ class getCouponRelatedApiController extends Controller {
         $ad_status = isset($ad_query) ? true : false;
         $ad_id = $ad_status ? $ad_query->id : -1;
         $website_type = $ad_status ? $ad_query->website_type : 0;
-        $return_results = array("status" => $ad_status, "id" => $ad_id, "website_type"=> $website_type);
+        $customer_type = $ad_status ? $ad_query->customer_type : 0;
+        $return_results = array("status" => $ad_status, "id" => $ad_id, "website_type"=> $website_type, "customer_type"=> $customer_type);
         // dd(json_encode($return_results));
         return json_encode($return_results);
+    }
+    // fetch all coupon status
+    public function get_all_ad_status(Request $request){
+        $web_id = null !==$request->input('web_id') ? $request->input('web_id') : '_';
+        
+        // connect to db, select coupon in running with the highest prioity
+        $ad_query = DB::connection('rhea1-db0')->table('addfan_activity')
+                                ->selectRaw('id, datediff(end_time, curdate()) as remain_time, website_type, customer_type')
+                                ->where('web_id', $web_id)
+                                ->where('activity_enable', 1)
+                                ->where('ad_enable', 1)
+                                ->where('activity_delete', '!=', 1)
+                                ->whereRaw('curdate() between start_time and end_time')
+                                ->orderByRaw('remain_time ASC')
+                                ->get(); // prevent SQL injection
+
+        // dd(empty($coupon_query[0]));
+        $ad_status = empty($ad_query[0]) ? false : true;
+        if ($ad_status) {
+            $return_results = array();
+            foreach ($ad_query as $sub_array) {
+                $sub_array->status = true;
+                array_push($return_results, $sub_array);
+            }
+            return json_encode($ad_query);
+        } else {
+            $return_results = array("id" => -1, "customer_type" => 0, "website_type" => 0, "status" => false);
+            return json_encode(array($return_results));
+        };
     }
     // fetch ad details
     public function get_ad(Request $request){
@@ -261,6 +293,56 @@ class getCouponRelatedApiController extends Controller {
         return json_encode($ad_result);
     }
 
+    // fetch sale items
+    public function get_sale_item(Request $request){
+        $web_id = null !==$request->input('web_id') ? $request->input('web_id') : '_';
+        // connect to db
+        $sale_item = DB::connection('rhea1-db0')->table('item_list')
+                                ->select('title', 'url')
+                                ->where('web_id', $web_id)
+                                ->where('sale_price', '>=', 200)                                
+                                ->orderByRaw("RAND()")
+                                ->limit(10)
+                                ->get();
+         return json_encode(!empty($sale_item[0]) ? $sale_item : array(array("title"=>"_", "url"=>"_")));
+    }
+
+
+    // convert product_id to name and url
+    public function get_product_name_url(Request $request){
+        $web_id = null !==$request->input('web_id') ? $request->input('web_id') : '_';
+        $product_id = null !==$request->input('product_id') ? $request->input('product_id') : '_';
+        // connect to db
+        $data = DB::connection('rhea1-db0')->table('item_list')
+                                ->select('title', 'url')
+                                ->where('web_id', $web_id)
+                                ->where('product_id', $product_id)                                
+                                ->first();
+
+        $name = isset($data) ? $data->title : "_";
+        $url = isset($data) ? $data->url : "_";
+        $result = array("name"=>$name, "url"=>$url);
+        
+        return json_encode($result);
+    }
+
+    // convert d to name and url form item_list and item_list_backup
+    public function get_product_from_id(Request $request){
+        $web_id = null !==$request->input('web_id') ? $request->input('web_id') : '_';
+        $id = null !==$request->input('id') ? $request->input('id') : '_';
+        // connect to db
+        $data = DB::connection('rhea1-db0')->table('item_list')
+                                ->leftJoin('item_list_backup', 'item_list.url', '=', 'item_list_backup.url')
+                                ->select('itme_list.title', 'itme_list.url')
+                                ->where('itme_list.web_id', $web_id)
+                                ->where(id, 'in', '(item_list.id, item_list_backup.id)')
+                                ->first();
+
+        $name = isset($data) ? $data->title : "_";
+        $url = isset($data) ? $data->url : "_";
+        $result = array("name"=>$name, "url"=>$url);
+        return json_encode($result);
+    }
 
 
 }
