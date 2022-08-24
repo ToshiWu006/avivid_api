@@ -325,5 +325,26 @@ class getCouponRelatedApiController extends Controller {
         
         return json_encode($result);
     }
+
+    // convert id to name and url form item_list and item_list_backup
+    public function get_product_from_id(Request $request){
+        $web_id = null !==$request->input('web_id') ? $request->input('web_id') : '_';
+        $id = null !==$request->input('id') ? $request->input('id') : '_';
+        // connect to db
+        $data = DB::connection('rhea1-db0')->table('item_list')
+                                ->select('title', 'url')
+                                ->where('web_id', $web_id)
+                                ->where('id', $id)
+                                ->first();
+        $data_backup = DB::connection('rhea1-db0')->table('item_list_backup')
+                                        ->select('title', 'url')
+                                        ->where('web_id', $web_id)
+                                        ->where('id', $id)
+                                        ->first();
+        $name = isset($data) ? $data->title : (isset($data_backup) ? $data_backup->title : "_");
+        $url = isset($data) ? $data->url : (isset($data_backup) ? $data_backup->url : "_");
+        $result = array("name"=>$name, "url"=>$url);
+        return json_encode($result);
+    }
 }
 
