@@ -85,6 +85,7 @@ Route::get('/coupon/get_name_url','getCouponRelatedApiController@get_product_nam
 Route::get('/coupon/get_name_url_id','getCouponRelatedApiController@get_product_from_id');// convert id to name and url
 
 Route::get('/getGAEventWebId', 'recommendationSettingsController@getGAEventWebId');//使用GA事件的web id名單
+Route::get('/getGA4EventWebId', 'recommendationSettingsController@getGA4EventWebId');//使用GA4的web id名單
 Route::get('/getIgnoreUTMWebId', 'recommendationSettingsController@getIgnoreUTMWebId');//不使用UTM的web id名單
 
 Route::get('/getCoupon','gatherPageApiController@coupon_onpage');
@@ -138,6 +139,8 @@ Route::get('/productEcom_david','gatherPageApiControllerDavid@get_product_for_ec
 
 
 Route::get('/cartEcom','cartRecommendController@get_cart_ecom');//購物車商品集合頁
+Route::get('/cartEcom_kyo','cartRecommendKyoController@get_cart_ecom_kyo');//購物車商品集合頁 測試用
+
 Route::get('/cart_item','cartRecommendController@get_cart_item');
 
 Route::get('/keywordSearch','keywordSearchController@get_keyword');//新搜索版位
@@ -148,4 +151,18 @@ Route::middleware('throttle:60000,1')->
     get('/productRec', 'publicApiController@get_product_for_ecom');//對外商品推薦API
 
 Route::middleware('ApiThrottle')->
-    get('/redis_test', 'redisTestController@redis_test');
+    get('/bannerRec', 'publicApiController@bannerRecommendation');
+Route::middleware('ApiThrottle')->
+    get('/bannerKeywordItem', 'publicApiController@bannerKeywordItem');
+Route::middleware('ApiThrottle')->
+    get('/bannerKeywordHot', 'publicApiController@bannerKeywordHot');
+Route::middleware('ApiThrottle')->
+    get('/bannerHistory', 'publicApiController@bannerHistory');
+
+
+Route::get('/get_new_meta_title','getNewMetaTitleController@get_new_meta_title');//取得新的meta_title
+Route::get('/get_product_id','getProductIdController@get_product_id');//取得product_id
+Route::get('/get_keywords','getKeywordsController@get_keywords');//取得keywords
+
+Route::get('/hottestNewProductMichael', 'searchEngineControllerSEOmichael@hottestNewProduct');
+Route::get('/itemPageGetItemMichael', 'itemPageControllerMichael@getItem');
